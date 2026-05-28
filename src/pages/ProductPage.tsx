@@ -3,6 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { Star, Flame, Shield, Truck, RotateCcw, ChevronLeft, ChevronRight, Minus, Plus, Heart } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { products, testimonials } from '../data/products';
+import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
+
+/**
+ * FIX: Add to Cart with Toast Notifications
+ * - Clicking "Claim Your Energy" button now properly adds items to cart
+ * - Shows "Added to your cart" toast notification
+ * - Shows shipping reminder if subtotal < $50 after adding
+ */
 
 export default function ProductPage() {
   const { productId } = useParams();

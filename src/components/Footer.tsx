@@ -13,6 +13,11 @@ export default function Footer() {
     }
   };
 
+  // FIX: Scroll to top on footer link click
+  const handleFooterClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="bg-warmGray">
       {/* Newsletter Section */}
@@ -55,7 +60,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <h2 className="font-serif text-3xl font-bold text-darkBrown mb-4">ORIKUN</h2>
+            <Link to="/" onClick={handleFooterClick} className="inline-block">
+              <h2 className="font-serif text-3xl font-bold text-darkBrown mb-4">ORIKUN</h2>
+            </Link>
             <p className="text-darkBrown/70 mb-6">
               Sacred crystals from the Kunlun Mountains, crafted to guide you back to who you're meant to be.
             </p>
@@ -72,7 +79,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://www.instagram.com/orikun"
+                href="https://www.instagram.com/ororikun"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-gold/20 rounded-full flex items-center justify-center text-goldDark hover:bg-gold hover:text-white transition-colors"
@@ -96,32 +103,32 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Shop */}
+          {/* Shop - FIX: All links now use Link component with onClick for scroll-to-top */}
           <div>
             <h4 className="font-serif text-lg font-semibold text-darkBrown mb-4">Shop</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/shop" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/shop" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   All Products
                 </Link>
               </li>
               <li>
-                <Link to="/shop?type=bracelet" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/bracelets" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Bracelets
                 </Link>
               </li>
               <li>
-                <Link to="/shop?type=necklace" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/necklaces" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Necklaces
                 </Link>
               </li>
               <li>
-                <Link to="/bestsellers" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/bestsellers" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Best Sellers
                 </Link>
               </li>
               <li>
-                <Link to="/shop?new=true" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/shop?new=true" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   New Arrivals
                 </Link>
               </li>
@@ -133,12 +140,12 @@ export default function Footer() {
             <h4 className="font-serif text-lg font-semibold text-darkBrown mb-4">Help</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/faq" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/faq" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/about" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   About Us
                 </Link>
               </li>
@@ -148,12 +155,12 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <Link to="/shipping" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/shipping" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Shipping Info
                 </Link>
               </li>
               <li>
-                <Link to="/returns" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/returns" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Returns & Refunds
                 </Link>
               </li>
@@ -165,22 +172,22 @@ export default function Footer() {
             <h4 className="font-serif text-lg font-semibold text-darkBrown mb-4">By Intention</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/intention/love" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/intention/love" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Love & Attraction
                 </Link>
               </li>
               <li>
-                <Link to="/intention/healing" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/intention/healing" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Healing & Calm
                 </Link>
               </li>
               <li>
-                <Link to="/intention/protection" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/intention/protection" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Protection & Grounding
                 </Link>
               </li>
               <li>
-                <Link to="/intention/abundance" className="text-darkBrown/70 hover:text-goldDark transition-colors">
+                <Link to="/intention/abundance" onClick={handleFooterClick} className="text-darkBrown/70 hover:text-goldDark transition-colors">
                   Abundance & Wealth
                 </Link>
               </li>
@@ -234,9 +241,9 @@ export default function Footer() {
           <div className="text-center text-sm text-darkBrown/50">
             <p>&copy; 2026 ORIKUN. All rights reserved.</p>
             <div className="flex justify-center gap-4 mt-2">
-              <Link to="/privacy" className="hover:text-goldDark transition-colors">Privacy Policy</Link>
+              <Link to="/privacy" onClick={handleFooterClick} className="hover:text-goldDark transition-colors">Privacy Policy</Link>
               <span>|</span>
-              <Link to="/terms" className="hover:text-goldDark transition-colors">Terms of Service</Link>
+              <Link to="/terms" onClick={handleFooterClick} className="hover:text-goldDark transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>

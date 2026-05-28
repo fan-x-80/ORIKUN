@@ -3,15 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, X, Globe, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
-// Anchor navigation sections on home page
-const anchorSections = [
-  { label: 'Shop', href: '/shop' },
-  { label: 'Best Sellers', href: '/bestsellers' },
-  { label: 'By Intention', href: '/intention' },
-  { label: 'About', href: '/about' },
-  { label: 'FAQ', href: '/faq' },
-];
-
+// Navigation items with routes
 const navigation = {
   Shop: {
     All: '/shop',
@@ -50,42 +42,25 @@ export default function Header() {
   const [regionSelectorOpen, setRegionSelectorOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(regions[0]);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string>('');
   const location = useLocation();
   const { cartCount } = useCart();
-  const isHomePage = location.pathname === '/';
 
-  // Refs for click-outside detection
+  // Refs for dropdown containers
+  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const regionRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLElement>(null);
 
-  // Track scroll position for active section highlighting
+  // Track scroll position for header styling
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
-
-      if (!isHomePage) return;
-
-      const sectionIds = ['home', 'best-sellers', 'intention', 'about', 'faq'];
-      const scrollPosition = window.scrollY + 180;
-
-      for (let i = sectionIds.length - 1; i >= 0; i--) {
-        const section = document.getElementById(sectionIds[i]);
-        if (section && section.offsetTop <= scrollPosition) {
-          setActiveSection(sectionIds[i]);
-          return;
-        }
-      }
-      setActiveSection('');
     };
-
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isHomePage]);
+  }, []);
 
-  // FIX 1: Click-outside detection - closes all dropdowns when clicking outside
+  // FIX 1: Click-outside detection - closes dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Close region selector if clicked outside
@@ -96,10 +71,12 @@ export default function Header() {
       if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
         setAccountDropdownOpen(false);
       }
-      // Close nav dropdowns if clicked outside (but not on the nav area itself)
-      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
-        setOpenDropdown(null);
-      }
+      // Close nav dropdowns if clicked outside their container
+      Object.entries(dropdownRefs.current).forEach(([key, ref]) => {
+        if (ref && !ref.contains(event.target as Node)) {
+          setOpenDropdown(prev => prev === key ? null : prev);
+        }
+      });
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -121,31 +98,14 @@ export default function Header() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Smooth scroll to section on home page
-  const handleAnchorClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith('/') && !href.includes('#')) {
-      return;
-    }
-    e.preventDefault();
-    const targetId = href.replace('#', '');
-    const element = document.getElementById(targetId);
-    if (element) {
-      const offset = 140;
-      const top = element.offsetTop - offset;
-      window.scrollTo({ top, behavior: 'smooth' });
-      setMobileMenuOpen(false);
-      setOpenDropdown(null);
-    }
-  }, []);
-
-  // FIX 3: Secondary nav items - scroll to top on click (for non-home pages)
-  const handleNavItemClick = useCallback(() => {
-    // Scroll to top of page on navigation
+  // FIX 3: Scroll to top on navigation
+  const handleNavClick = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setOpenDropdown(null);
     setMobileMenuOpen(false);
   }, []);
 
+  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
     setOpenDropdown(null);
@@ -155,9 +115,8 @@ export default function Header() {
 
   return (
     <header
-      ref={headerRef}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-cream/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
+        isScrolled ? 'bg-cream/95 backdrop-blur-md shadow-sm' : 'bg-cream/95'
       }`}
     >
       {/* Announcement Bar with Social Icons */}
@@ -203,7 +162,7 @@ export default function Header() {
 
             {/* Center: Announcement Text */}
             <div className="flex-1 text-center">
-              <a href="#" className="hover:opacity-90 transition-opacity text-white text-sm">
+              <a href="/shop" className="hover:opacity-90 transition-opacity text-white text-sm">
                 <span>BUY 1, GET 2ND 30% OFF</span>
                 <span className="hidden sm:inline mx-2">|</span>
                 <span className="hidden sm:inline">Free Shipping on Orders $50+</span>
@@ -219,87 +178,71 @@ export default function Header() {
       <nav className="container-custom">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Left: Logo */}
-          <Link to="/" className="flex-shrink-0">
+          <Link to="/" onClick={handleNavClick} className="flex-shrink-0">
             <h1 className="font-serif text-2xl md:text-3xl font-bold text-darkBrown tracking-wide">
               ORIKUN
             </h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            {isHomePage ? (
-              anchorSections.map((item) => {
-                const sectionId = item.href.replace('#', '').replace('/', '');
-                const isActive = activeSection === sectionId;
-                return (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    onClick={(e) => handleAnchorClick(e, item.href)}
-                    className={`transition-colors font-medium py-2 ${
-                      isActive
-                        ? 'text-goldDark'
-                        : 'text-darkBrown hover:text-goldDark'
-                    }`}
-                  >
-                    {item.label}
-                  </a>
-                );
-              })
-            ) : (
-              Object.entries(navigation).map(([key, items]) => (
-                <div
-                  key={key}
-                  className="relative"
-                  // FIX 4: Hover opens dropdown, mouse leave closes it
-                  onMouseEnter={() => setOpenDropdown(key)}
-                  onMouseLeave={() => setOpenDropdown(null)}
+          <div className="hidden lg:flex items-center gap-6">
+            {Object.entries(navigation).map(([key, items]) => (
+              <div
+                key={key}
+                ref={(el) => { dropdownRefs.current[key] = el; }}
+                className="relative"
+                onMouseEnter={() => typeof items === 'object' && setOpenDropdown(key)}
+                onMouseLeave={() => typeof items === 'object' && setOpenDropdown(null)}
+              >
+                <Link
+                  to={typeof items === 'string' ? items : '#'}
+                  onClick={handleNavClick}
+                  className="text-darkBrown hover:text-goldDark transition-colors font-medium py-2 flex items-center gap-1"
                 >
-                  <Link
-                    to={typeof items === 'string' ? items : '#'}
-                    onClick={handleNavItemClick}
-                    className="text-darkBrown hover:text-goldDark transition-colors font-medium py-2"
-                  >
-                    {key}
-                  </Link>
-
-                  {/* Dropdown - closes on mouse leave handled by parent onMouseLeave */}
-                  {openDropdown === key && typeof items === 'object' && (
-                    <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-4 animate-fade-in">
-                      {Object.entries(items).map(([label, path]) => (
-                        <Link
-                          key={label}
-                          to={path}
-                          onClick={handleNavItemClick}
-                          className="block px-4 py-2 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors"
-                        >
-                          {label}
-                        </Link>
-                      ))}
-                    </div>
+                  {key}
+                  {typeof items === 'object' && (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   )}
-                </div>
-              ))
-            )}
+                </Link>
+
+                {/* FIX 4: Dropdown menu - visible on hover, closes on mouse leave */}
+                {openDropdown === key && typeof items === 'object' && (
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-xl py-3 animate-fade-in z-50">
+                    {Object.entries(items).map(([label, path]) => (
+                      <Link
+                        key={label}
+                        to={path}
+                        onClick={handleNavClick}
+                        className="block px-4 py-2.5 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors text-sm"
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Right: Icons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Region Selector */}
             <div ref={regionRef} className="relative hidden md:block">
               <button
                 onClick={() => setRegionSelectorOpen(!regionSelectorOpen)}
-                onBlur={() => setRegionSelectorOpen(false)}
-                className="flex items-center gap-1 text-darkBrown hover:text-goldDark transition-colors"
+                onBlur={() => setTimeout(() => setRegionSelectorOpen(false), 150)}
+                className="flex items-center gap-1 text-darkBrown hover:text-goldDark transition-colors p-1"
                 aria-expanded={regionSelectorOpen}
                 aria-haspopup="listbox"
               >
                 <Globe className="w-5 h-5" />
-                <span className="text-sm">{selectedRegion.code}</span>
+                <span className="text-sm font-medium">{selectedRegion.code}</span>
               </button>
 
               {regionSelectorOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl py-2 animate-fade-in z-50">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl py-2 animate-fade-in z-50 overflow-hidden">
                   {regions.map((region) => (
                     <button
                       key={region.code}
@@ -307,8 +250,8 @@ export default function Header() {
                         setSelectedRegion(region);
                         setRegionSelectorOpen(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 hover:bg-cream transition-colors ${
-                        selectedRegion.code === region.code ? 'text-goldDark font-medium' : 'text-darkBrown'
+                      className={`block w-full text-left px-4 py-2.5 hover:bg-cream transition-colors text-sm ${
+                        selectedRegion.code === region.code ? 'text-goldDark font-medium bg-gold/10' : 'text-darkBrown'
                       }`}
                       role="option"
                       aria-selected={selectedRegion.code === region.code}
@@ -320,17 +263,12 @@ export default function Header() {
               )}
             </div>
 
-            {/* Search */}
-            <button className="text-darkBrown hover:text-goldDark transition-colors">
-              <Search className="w-5 h-5" />
-            </button>
-
             {/* Account */}
             <div ref={accountRef} className="relative">
               <button
                 onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-                onBlur={() => setAccountDropdownOpen(false)}
-                className="text-darkBrown hover:text-goldDark transition-colors flex items-center gap-1"
+                onBlur={() => setTimeout(() => setAccountDropdownOpen(false), 150)}
+                className="text-darkBrown hover:text-goldDark transition-colors flex items-center gap-1 p-1"
                 aria-expanded={accountDropdownOpen}
                 aria-haspopup="menu"
               >
@@ -338,26 +276,26 @@ export default function Header() {
               </button>
 
               {accountDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-gradient-to-br from-[#F5F1EA] to-white rounded-lg shadow-xl py-2 animate-fade-in border border-khaki/20 z-50">
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-xl py-2 animate-fade-in border border-khaki/20 z-50 overflow-hidden">
                   <Link
                     to="/login"
-                    onClick={() => setAccountDropdownOpen(false)}
-                    className="block px-4 py-2 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors"
+                    onClick={() => { handleNavClick(); setAccountDropdownOpen(false); }}
+                    className="block px-4 py-2.5 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors text-sm"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    onClick={() => setAccountDropdownOpen(false)}
-                    className="block px-4 py-2 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors"
+                    onClick={() => { handleNavClick(); setAccountDropdownOpen(false); }}
+                    className="block px-4 py-2.5 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors text-sm"
                   >
                     Create Account
                   </Link>
-                  <div className="border-t border-khaki/20 my-2"></div>
+                  <div className="border-t border-khaki/20 my-1"></div>
                   <Link
                     to="/account"
-                    onClick={() => setAccountDropdownOpen(false)}
-                    className="block px-4 py-2 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors"
+                    onClick={() => { handleNavClick(); setAccountDropdownOpen(false); }}
+                    className="block px-4 py-2.5 text-darkBrown hover:bg-cream hover:text-goldDark transition-colors text-sm"
                   >
                     My Account
                   </Link>
@@ -366,10 +304,14 @@ export default function Header() {
             </div>
 
             {/* Cart */}
-            <Link to="/cart" className="text-darkBrown hover:text-goldDark transition-colors relative">
+            <Link
+              to="/cart"
+              onClick={handleNavClick}
+              className="text-darkBrown hover:text-goldDark transition-colors relative p-1"
+            >
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-white text-xs rounded-full flex items-center justify-center font-medium animate-bounce-subtle">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-gold text-white text-xs rounded-full flex items-center justify-center font-medium px-1">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
@@ -377,7 +319,7 @@ export default function Header() {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden text-darkBrown"
+              className="lg:hidden text-darkBrown p-1"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-label="Toggle menu"
@@ -388,88 +330,75 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - FIX 5: Full mobile navigation with scroll-to-top */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-cream border-t">
+        <div className="lg:hidden bg-cream border-t absolute top-full left-0 right-0 shadow-lg overflow-y-auto max-h-[80vh]">
           <div className="container-custom py-4">
-            {isHomePage ? (
-              anchorSections.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleAnchorClick(e, item.href)}
-                  className="block py-2 text-darkBrown font-medium hover:text-goldDark transition-colors"
-                >
-                  {item.label}
-                </a>
-              ))
-            ) : (
-              Object.entries(navigation).map(([key, items]) => (
-                <div key={key} className="py-2">
-                  {typeof items === 'string' ? (
+            {Object.entries(navigation).map(([key, items]) => (
+              <div key={key} className="py-2">
+                {typeof items === 'string' ? (
+                  <Link
+                    to={items}
+                    onClick={handleNavClick}
+                    className="block py-3 text-darkBrown font-medium hover:text-goldDark transition-colors border-b border-khaki/10"
+                  >
+                    {key}
+                  </Link>
+                ) : (
+                  <>
                     <Link
-                      to={items}
-                      onClick={() => {
-                        handleNavItemClick();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="block py-2 text-darkBrown font-medium hover:text-goldDark transition-colors"
+                      to={items['All'] || '#'}
+                      onClick={handleNavClick}
+                      className="block py-3 text-darkBrown font-medium border-b border-khaki/10"
                     >
                       {key}
                     </Link>
-                  ) : (
-                    <>
-                      <span className="block py-2 text-darkBrown font-medium opacity-70">{key}</span>
-                      <div className="pl-4">
-                        {Object.entries(items).map(([label, path]) => (
-                          <Link
-                            key={label}
-                            to={path}
-                            onClick={() => {
-                              handleNavItemClick();
-                              setMobileMenuOpen(false);
-                            }}
-                            className="block py-1.5 text-darkBrown/80 hover:text-goldDark transition-colors text-sm"
-                          >
-                            {label}
-                          </Link>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))
-            )}
+                    <div className="pl-4 py-1">
+                      {Object.entries(items).map(([label, path]) => (
+                        <Link
+                          key={label}
+                          to={path}
+                          onClick={handleNavClick}
+                          className="block py-2 text-darkBrown/80 hover:text-goldDark transition-colors text-sm"
+                        >
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
 
             {/* Account Links in Mobile */}
-            <div className="pt-4 border-t mt-4">
-              <span className="block py-2 text-darkBrown font-medium opacity-70">Account</span>
+            <div className="pt-4 border-t mt-2">
+              <span className="block py-2 text-darkBrown font-medium">Account</span>
               <Link
                 to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-darkBrown/80 hover:text-goldDark text-sm"
+                onClick={handleNavClick}
+                className="block py-2 text-darkBrown/80 hover:text-goldDark text-sm"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-darkBrown/80 hover:text-goldDark text-sm"
+                onClick={handleNavClick}
+                className="block py-2 text-darkBrown/80 hover:text-goldDark text-sm"
               >
                 Create Account
               </Link>
               <Link
                 to="/account"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-1.5 text-darkBrown/80 hover:text-goldDark text-sm"
+                onClick={handleNavClick}
+                className="block py-2 text-darkBrown/80 hover:text-goldDark text-sm"
               >
                 My Account
               </Link>
             </div>
 
             {/* Mobile Region Selector */}
-            <div className="pt-4 border-t mt-4">
-              <span className="block py-2 text-darkBrown font-medium opacity-70">Region</span>
+            <div className="pt-4 border-t mt-2">
+              <span className="block py-2 text-darkBrown font-medium">Region</span>
               <div className="grid grid-cols-2 gap-2">
                 {regions.map((region) => (
                   <button
@@ -478,7 +407,7 @@ export default function Header() {
                       setSelectedRegion(region);
                       setMobileMenuOpen(false);
                     }}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`px-3 py-2.5 rounded-lg text-sm transition-colors text-left ${
                       selectedRegion.code === region.code
                         ? 'bg-gold text-white'
                         : 'bg-warmGray text-darkBrown hover:bg-khaki'

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import BackToTop from './components/BackToTop';
 import Toast from './components/Toast';
 import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
@@ -46,6 +47,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
+            <BackToTop />
             <Toast />
           </div>
         </Router>
